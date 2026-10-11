@@ -24,7 +24,10 @@ class BroadcastController extends Controller
         $contacts = DB::table('church_contacts')->where('church_id', $churchId)->whereNotNull('consent_at')->count();
         $jobs = DB::table('church_automation_jobs')->where('church_id', $churchId)
             ->where('kind', 'broadcast')->orderByDesc('id')->paginate(25);
-        return view('church-center.broadcast', compact('church', 'contacts', 'jobs'));
+        $setting = DB::table('church_settings')->where('church_id', $churchId)
+            ->where('key', 'birthday_message')->first();
+        $birthdayMessage = $setting ? json_decode($setting->value, true) : '';
+        return view('church-center.broadcast', compact('church', 'contacts', 'jobs', 'birthdayMessage'));
     }
 
     public function store(Request $request, int $churchId)
