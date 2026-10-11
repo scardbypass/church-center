@@ -27,6 +27,12 @@ class AdminChurchesController extends Controller
         DB::table('churches')->where('id', $churchId)->update([
             'active' => !$church->active, 'updated_at' => now(),
         ]);
+        DB::table('church_audit_logs')->insert([
+            'church_id' => $churchId, 'actor_id' => $request->user()->id,
+            'action' => 'admin.church.toggle',
+            'details' => json_encode(['active' => !$church->active]),
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
         return redirect()->route('admin.churches.index')->with('status', 'Status gereja diperbarui.');
     }
 }
