@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ChurchController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,5 +24,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/churches', [ChurchController::class, 'store'])->middleware('throttle:5,1')->name('churches.store');
+    Route::get('/churches/{churchId}/contacts', [ContactController::class, 'index'])->whereNumber('churchId')->name('churches.contacts.index');
+    Route::post('/churches/{churchId}/contacts', [ContactController::class, 'store'])->whereNumber('churchId')->middleware('throttle:30,1')->name('churches.contacts.store');
+    Route::delete('/churches/{churchId}/contacts/{contactId}', [ContactController::class, 'destroy'])->whereNumber('churchId')->whereNumber('contactId')->name('churches.contacts.destroy');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
