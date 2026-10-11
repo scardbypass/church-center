@@ -5,6 +5,7 @@ use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,5 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/churches/{churchId}/tickets', [SupportTicketController::class, 'store'])->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.tickets.store');
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
     Route::patch('/admin/tickets/{ticketId}/close', [AdminController::class, 'closeTicket'])->whereNumber('ticketId')->name('admin.tickets.close');
+    Route::get('/churches/{churchId}/automations', [AutomationController::class, 'index'])->whereNumber('churchId')->name('churches.automations.index');
+    Route::post('/churches/{churchId}/automations', [AutomationController::class, 'store'])->whereNumber('churchId')->middleware('throttle:10,1')->name('churches.automations.store');
+    Route::delete('/churches/{churchId}/automations/{jobId}', [AutomationController::class, 'destroy'])->whereNumber('churchId')->whereNumber('jobId')->name('churches.automations.destroy');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
