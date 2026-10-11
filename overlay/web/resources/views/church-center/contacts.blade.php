@@ -20,6 +20,11 @@
 <button class="button primary" style="border:0;cursor:pointer">Simpan Kontak</button>
 </form>
 </section>
+<section class="wrap glass" style="padding:26px;border-radius:24px;margin-bottom:25px">
+<h2>Impor CSV</h2><p>Kolom wajib: <code>name,phone</code>. Maksimal 2 MB atau 5000 baris. Kontak impor tidak otomatis dianggap menyetujui pesan.</p>
+<form method="POST" action="{{ route('churches.contacts.import', $church->id) }}" enctype="multipart/form-data">@csrf
+<input type="file" name="file" accept=".csv,text/csv" required><button class="button secondary">Impor Kontak</button></form>
+</section>
 <section class="wrap glass" style="padding:26px;border-radius:24px;margin-bottom:70px;overflow-x:auto">
 <h2>Daftar Kontak</h2>
 <table style="width:100%;border-collapse:collapse;text-align:left;min-width:540px">
@@ -30,7 +35,8 @@
 <td style="padding:15px 6px">{{ $contact->name }}</td>
 <td>{{ $contact->phone_e164 }}</td>
 <td>{{ $contact->consent_at ? 'Ya' : 'Belum' }}</td>
-<td><form method="POST" action="{{ route('churches.contacts.destroy', [$church->id, $contact->id]) }}">@csrf @method('DELETE')<button style="cursor:pointer" onclick="return confirm('Hapus kontak ini?')">Hapus</button></form></td>
+<td>@if($contact->consent_at)<form method="POST" action="{{ route('churches.contacts.revoke', [$church->id, $contact->id]) }}">@csrf @method('PATCH')<button>Cabut persetujuan</button></form>@endif
+<form method="POST" action="{{ route('churches.contacts.destroy', [$church->id, $contact->id]) }}">@csrf @method('DELETE')<button style="cursor:pointer" onclick="return confirm('Hapus kontak ini?')">Hapus</button></form></td>
 </tr>
 @empty
 <tr><td colspan="4" style="padding:20px">Belum ada kontak.</td></tr>
