@@ -30,7 +30,7 @@ class AutomationController extends Controller
         $this->authorizeChurch($request, $churchId);
         $data = $request->validate([
             'kind' => ['required', Rule::in(['ih_morning', 'ih_noon', 'ih_evening', 'broadcast', 'reminder'])],
-            'target' => ['required', 'string', 'min:3', 'max:120'],
+            'target' => ['required', 'string', 'max:120', 'regex:/^(?:[1-9][0-9]{5,15}@s\\.whatsapp\\.net|[0-9-]+@g\\.us)$/'],
             'message' => ['required', 'string', 'min:2', 'max:5000'],
             'scheduled_at' => ['required', 'date', 'after:now'],
         ]);
@@ -47,6 +47,20 @@ class AutomationController extends Controller
         ]);
         return redirect()->route('churches.automations.index', $churchId)
             ->with('status', 'Draft jadwal tersimpan. Pengiriman belum aktif hingga worker WhatsApp terhubung.');
+    }
+
+    public function activate(Request $request, int $churchId, int $jobId)
+    {
+        $this->authorizeChurch($request, $churchId);
+        $licensed = DB::table('church_licenses')->where('church_id', $churchId)
+            ->where('status', 'active')->where('expires_at', '>', now())->exists();
+        abort_unless($licensed, 403, 'Lisensi gereja belum aktif.');
+        $updated = DB::table('church_automation_jobs')->where('church_id', $churchId)
+            ->where('id', $jobId)->where('status', 'draft')->where('scheduled_at', '>', now())
+            ->update(['status' => 'queued', 'updated_at' => now()]);
+        abort_unless($updated, 409, 'Draft tidak tersedia atau jadwal sudah lewat.');
+        return redirect()->route('churches.automations.index', $churchId)
+            ->with('status', 'Jadwal diantrekan. Pengiriman bergantung pada scheduler dan WhatsApp yang terhubung.');
     }
 
     public function destroy(Request $request, int $churchId, int $jobId)
