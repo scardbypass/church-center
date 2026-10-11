@@ -2,7 +2,7 @@
 
 **Church Center** adalah proyek SaaS multi-gereja untuk tim Fulltime dan Admin Pusat, dengan rencana otomasi WhatsApp, renungan, jadwal ibadah, pengingat, lisensi, dan pembayaran.
 
-> **Status implementasi: Starter / fase 1 (schema tenant + worker health PM2).** Halaman publik Beranda, Fitur, Lisensi, dan endpoint `/health` sudah dibuat. **Login, dashboard, koneksi WhatsApp, database multi-tenant, pembayaran, serta otomatisasi belum dibuat.** Jangan gunakan starter ini untuk transaksi nyata atau data jemaat produksi.
+> **Status: starter pengembangan (belum siap produksi).** Halaman publik, skema awal multi-gereja, kode Google OAuth, dashboard Fulltime dasar, dan health endpoint worker PM2 sudah tersedia di GitHub. **Belum diuji end-to-end di VPS.** Bot WhatsApp belum terhubung; pembayaran dan otomatisasi belum diimplementasikan. Jangan gunakan untuk transaksi atau data jemaat nyata.
 
 ## Sudah ada sekarang
 - Halaman landing responsif bergaya iOS-inspired Liquid Glass, CSS dipisah dari Blade.
@@ -20,7 +20,7 @@
 | Modul | Rencana | Status |
 |---|---|---|
 | Admin Pusat | Kelola gereja, Fulltime, harga, lisensi, transaksi, monitoring, tiket, maintenance, kontrol global | Belum |
-| Fulltime | Dashboard gereja, tim, izin, konfigurasi semua layanan | Belum |
+| Fulltime | Dashboard gereja, tim, izin, konfigurasi semua layanan | Dashboard dasar dan buat gereja ditulis; belum diuji, modul lainnya belum |
 | Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Login Google dasar dibuat, belum diuji; undangan belum |
 | Kontak | Input manual, CSV/Excel, Google Contacts, consent, deduplikasi | Belum |
 | Bot WhatsApp | QR/pairing per gereja, koneksi, `menu`/`start`, balasan otomatis, FAQ | Worker health-only; integrasi WA belum |
@@ -39,7 +39,7 @@
 
 - `overlay/web/` — file Laravel khusus Church Center (routes, Blade, CSS).
 - `apps/web/` — Laravel 12 hasil `install.sh`; sengaja tidak disimpan sebagai ribuan file vendor/framework.
-- `apps/whatsapp-worker/` — **direncanakan**, belum ada worker.
+- `apps/whatsapp-worker/` — worker Node.js health-only, dapat dikelola PM2; **belum** mengirim/menerima pesan WhatsApp.
 - `docs/` — panduan instalasi dan keamanan.
 
 **Mengapa overlay?** Repository awal tetap kecil dan mudah dibaca. Skrip mengambil Laravel resmi melalui Composer lalu menyalin file custom; `vendor/`, `node_modules/`, `.env`, sesi WA, dan database tidak boleh masuk Git.
@@ -162,7 +162,7 @@ php artisan optimize:clear
 sudo systemctl reload php8.2-fpm
 ```
 
-Jangan jalankan ulang `install.sh` pada produksi setiap update: skrip awal menghasilkan APP_KEY baru. Gunakan prosedur update di atas agar APP_KEY tetap. Backup database dan `.env` sebelum migrasi besar. Jika konfigurasi PHP-FPM menggunakan opcache agresif, reload service diperlukan.
+Jangan jalankan ulang `install.sh` pada produksi untuk update rutin. Versi terbaru menjaga APP_KEY yang sudah terisi, tetapi tetap gunakan prosedur update di atas. Gunakan prosedur update di atas agar APP_KEY tetap. Backup database dan `.env` sebelum migrasi besar. Jika konfigurasi PHP-FPM menggunakan opcache agresif, reload service diperlukan.
 
 ## Keamanan & batasan
 
@@ -170,7 +170,7 @@ Jangan jalankan ulang `install.sh` pada produksi setiap update: skrip awal mengh
 - Repository Public berisi kode, **bukan data pengguna**.
 - Koneksi WhatsApp melalui library tidak resmi dapat berisiko pemblokiran; evaluasi WhatsApp Business Platform resmi untuk produksi.
 - QRIS GoPay Merchant belum diintegrasikan; flow OTP, webhook, dan verifikasi transaksi harus diuji terhadap SDK/API yang benar.
-- Setelah fitur login tersedia, wajib ada CSRF protection, otorisasi role, rate limiting, audit log, dan tes isolasi tenant.
+- Login Google memakai sesi OAuth dan membutuhkan email Google terverifikasi. Form pembuatan gereja memakai CSRF dan rate limit, tetapi **belum ada tes isolasi tenant yang lengkap**, audit log, dan otorisasi per modul.
 
 ## Alur yang akan dibangun
 
@@ -185,3 +185,82 @@ Admin Pusat mengatur paket dan layanan global → Fulltime login dengan Google �
 5. Lisensi, pembayaran terverifikasi, tiket, backup, maintenance, dan audit.
 
 Kontribusi: gunakan modul kecil, service teruji, dan komponen UI reusable. Jangan menambahkan fungsi palsu atau tombol yang tidak melakukan apa-apa.
+
+---
+
+## Login Google: dari Google Cloud sampai berhasil masuk
+
+> Tutorial ini untuk kode OAuth awal yang sudah ada. **Belum ada login password, login Admin Pusat, ataupun import Google Contacts.**
+
+1. Buka [Google Cloud Console](https://console.cloud.google.com/), buat atau pilih project Church Center.
+2. Di **Google Auth Platform**, atur **Branding** (nama aplikasi, email dukungan), **Audience** (External jika dipakai beberapa gereja), dan email kontak. Selama mode **Testing**, tambahkan akun Gmail penguji ke daftar **Test users**.
+3. Buka **Clients → Create client → Web application**.
+4. Pada **Authorized JavaScript origins** tambahkan `https://DOMAIN_ANDA` bila diperlukan; untuk redirect server-side, bagian yang wajib adalah **Authorized redirect URIs**:
+   ```text
+   https://DOMAIN_ANDA/auth/google/callback
+   ```
+   Alamat harus **persis sama**, termasuk protokol HTTPS, domain, dan path; jangan gunakan garis miring tambahan di akhir.
+5. Salin **Client ID** dan **Client secret**. Di VPS, edit `/var/www/church-center/apps/web/.env`:
+
+   ```dotenv
+   APP_NAME="Church Center"
+   APP_URL=https://DOMAIN_ANDA
+   APP_ENV=production
+   APP_DEBUG=false
+   GOOGLE_CLIENT_ID=ISI_CLIENT_ID_DARI_GOOGLE
+   GOOGLE_CLIENT_SECRET=ISI_CLIENT_SECRET_DARI_GOOGLE
+   GOOGLE_REDIRECT_URI=https://DOMAIN_ANDA/auth/google/callback
+   SESSION_SECURE_COOKIE=true
+   ```
+
+6. Pastikan domain sudah diarahkan ke VPS dan HTTPS sudah aktif. Jalankan:
+
+   ```bash
+   cd /var/www/church-center
+   git pull --ff-only
+   cp -R overlay/web/. apps/web/
+   cd apps/web
+   composer require 'laravel/socialite:^5.0' --no-interaction
+   php artisan migrate --force
+   php artisan optimize:clear
+   php artisan route:list --path=auth
+   ```
+
+7. Buka `https://DOMAIN_ANDA/login`, klik **Masuk dengan Google**, selesaikan izin akun, lalu periksa `/dashboard`. Buat gereja, refresh halaman, dan pastikan gereja tetap muncul.
+
+**Jika gagal:** `redirect_uri_mismatch` berarti URI di Google tidak identik dengan `.env`; `access_denied` sering berarti akun belum ditambahkan ke Test users; error 503 berarti Client ID/secret belum dikonfigurasi; jika redirect ke HTTP, periksa HTTPS, proxy, `APP_URL`, dan konfigurasi trusted proxies. Jangan pernah mengirim Client secret atau isi `.env` ke chat publik.
+
+Dokumentasi terpisah: [Panduan Login Google](docs/google-login.md).
+
+## Domain dan PM2
+
+Panduan lengkap DNS, Nginx, HTTPS, serta perintah `pm2 start chiwa.js --name church-center-bot`: [Domain & PM2](docs/domain-and-pm2.md).
+
+```bash
+cd /var/www/church-center
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup
+pm2 status
+curl -fsS http://127.0.0.1:31181/health
+```
+
+**Status `ok` dari worker hanya menunjukkan proses Node aktif, bukan bot WhatsApp sudah tersambung.** Website Laravel tetap berjalan dengan Nginx + PHP-FPM.
+
+## Audit bug dan status fitur (11 Oktober 2026)
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Installer menimpa APP_KEY ketika diulang | **Diperbaiki di kode:** hanya generate saat belum ada key |
+| Installer mengubah koneksi DB menjadi SQLite | **Diperbaiki di kode:** tidak menimpa koneksi DB yang sudah disetel |
+| OAuth menerima email tanpa verifikasi eksplisit | **Diperketat di kode:** wajib email Google terverifikasi |
+| Dashboard membaca data gereja lain | Query dashboard dibatasi ke membership user; **belum ada tes integrasi lintas akun** |
+| UI landing, fitur, lisensi, login, dashboard | File dan routing tersedia; **belum diuji lewat browser/VPS** |
+| Google login & sesi | Implementasi dasar ada; **perlu pengujian Google OAuth nyata** |
+| WhatsApp QR/pairing, koneksi per gereja, menu bot, Auto Reply, FAQ | **Belum ada** |
+| Auto IH, broadcast, pengingat, ulang tahun | **Belum ada** |
+| Google Contacts, impor CSV, persetujuan penerima | **Belum ada** |
+| Admin Pusat, lisensi, pembayaran, tiket, backup, laporan, maintenance | **Belum ada** |
+| PM2 worker health endpoint | Kode tersedia; **belum diuji berjalan di VPS** |
+
+**Prioritas sebelum produksi:** pengujian migrasi pada MariaDB dan SQLite, autentikasi OAuth nyata, otorisasi per gereja untuk semua endpoint, pengujian dua akun berbeda, job queue idempotent, consent dan rate limit broadcast, validasi webhook pembayaran, logging aman, backup, dan uji pemulihan service. Tidak ada klaim “bebas bug” sebelum pengujian tersebut selesai.
