@@ -13,6 +13,9 @@ if [[ ! -f apps/web/artisan ]]; then
 fi
 cp -R overlay/web/. apps/web/
 cd apps/web
+composer require laravel/socialite:^5.0 --no-interaction
+cd ../..
+cd apps/web
 if [[ ! -f .env ]]; then cp .env.example .env; fi
 if ! grep -Eq "^APP_KEY=base64:.+" .env; then php artisan key:generate --force; fi
 # SQLite is suitable for an initial single-server installation; configure MariaDB for production.
