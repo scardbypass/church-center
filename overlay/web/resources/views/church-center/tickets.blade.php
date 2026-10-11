@@ -20,7 +20,7 @@
 <section class="wrap" style="padding-bottom:60px">
 @forelse($tickets as $ticket)
 <article class="glass" style="padding:22px;border-radius:20px;margin-bottom:12px">
-<h3>{{ $ticket->subject }}</h3>
+<h3><a href="{{ route('tickets.show', $ticket->id) }}">{{ $ticket->subject }} →</a></h3>
 <p>Status: {{ $ticket->status }} · {{ $ticket->created_at }}</p>
 <p style="white-space:pre-wrap">{{ $ticket->message }}</p>
 </article>
