@@ -19,7 +19,7 @@
 
 | Modul | Rencana | Status |
 |---|---|---|
-| Admin Pusat | Kelola gereja, Fulltime, harga, lisensi, transaksi, monitoring, tiket, maintenance, kontrol global | Belum |
+| Admin Pusat | Kelola gereja, Fulltime, harga, lisensi, transaksi, monitoring, tiket, maintenance, kontrol global | Dashboard ringkasan dan tutup tiket tersedia dalam kode; fitur lainnya belum |
 | Fulltime | Dashboard gereja, tim, izin, konfigurasi semua layanan | Dashboard dasar dan buat gereja ditulis; belum diuji, modul lainnya belum |
 | Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Login Google dasar dibuat, belum diuji; undangan belum |
 | Kontak | Input manual, CSV/Excel, Google Contacts, consent, deduplikasi | Belum |
@@ -28,9 +28,9 @@
 | Broadcast | Langsung, terjadwal, berulang, media, antrean, log | Belum |
 | Pengingat | Ibadah mingguan, acara khusus, H-7/H-3/H-1, ulang tahun | Belum |
 | Backup | Backup pengaturan manual/terjadwal dan restore selektif | Belum |
-| Lisensi | Satu tier fitur, durasi 1/3/6/12 bulan, harga dari Admin | Belum |
-| Pembayaran | Transfer manual dengan bukti dan ACC Admin, QRIS GoPay Merchant setelah verifikasi SDK | Belum |
-| Bantuan | Tiket Fulltime ke Admin dengan lampiran dan status | Belum |
+| Lisensi | Satu tier fitur, durasi 1/3/6/12 bulan, harga dari Admin | Struktur database ada; aktivasi/renewal belum |
+| Pembayaran | Transfer manual dengan bukti dan ACC Admin, QRIS GoPay Merchant setelah verifikasi SDK | Struktur database ada; proses pembayaran belum |
+| Bantuan | Tiket Fulltime ke Admin dengan lampiran dan status | Buat, lihat, tutup tiket dasar tersedia dalam kode; balasan/lampiran belum |
 | Operasional | Kontrol global, maintenance website/bot, emergency stop, audit | Belum |
 
 **Rencana role login hanya Admin Pusat dan Fulltime.** Jemaat tidak perlu dashboard atau akun. Satu lisensi berlaku per gereja, bukan per Fulltime. Semua data operasional harus dibatasi oleh `church_id`. Switch global OFF harus mengalahkan switch lokal ON.
@@ -264,3 +264,24 @@ curl -fsS http://127.0.0.1:31181/health
 | PM2 worker health endpoint | Kode tersedia; **belum diuji berjalan di VPS** |
 
 **Prioritas sebelum produksi:** pengujian migrasi pada MariaDB dan SQLite, autentikasi OAuth nyata, otorisasi per gereja untuk semua endpoint, pengujian dua akun berbeda, job queue idempotent, consent dan rate limit broadcast, validasi webhook pembayaran, logging aman, backup, dan uji pemulihan service. Tidak ada klaim “bebas bug” sebelum pengujian tersebut selesai.
+
+## Modul Admin Pusat dan Tiket Bantuan (kode awal)
+
+Setelah update overlay dan `php artisan migrate --force`, akun Fulltime dapat membuka tiket dari dashboard gereja. Admin Pusat dapat melihat jumlah gereja, pengguna, tiket terbuka, permintaan pembayaran, dan menutup tiket melalui `/admin`. Semua endpoint memerlukan login, tiket gereja diperiksa keanggotaan `church_id`, dan halaman Admin Pusat hanya mengizinkan `platform_role=admin`.
+
+**Penting:** login Google baru tidak otomatis menjadi admin. Untuk menetapkan admin pertama, lakukan hanya setelah memverifikasi identitas pemilik dan menggunakan akses shell VPS tepercaya:
+
+```bash
+cd church-center/apps/web
+php artisan tinker
+```
+
+Lalu di Tinker, ganti email dengan email milik sendiri:
+
+```php
+$user = App\Models\User::where('email', 'EMAIL_ADMIN_ANDA')->firstOrFail();
+$user->platform_role = 'admin';
+$user->save();
+```
+
+Jangan berikan role Admin Pusat melalui formulir pendaftaran publik. Audit log, manajemen role, balasan tiket, lampiran, transaksi, serta integrasi bot dan pembayaran masih harus dibuat. Status tabel di atas menggambarkan **kode yang ditulis**, bukan hasil pengujian VPS.
