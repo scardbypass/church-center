@@ -20,7 +20,7 @@
 <h2>Tiket terbaru</h2>
 @forelse($tickets as $ticket)
 <article class="glass" style="padding:22px;border-radius:20px;margin-bottom:12px">
-<h3>{{ $ticket->subject }}</h3>
+<h3><a href="{{ route('tickets.show', $ticket->id) }}">{{ $ticket->subject }}</a></h3>
 <p>{{ $ticket->church_name }} · {{ $ticket->status }}</p>
 <p style="white-space:pre-wrap">{{ $ticket->message }}</p>
 @if($ticket->status === 'open')
