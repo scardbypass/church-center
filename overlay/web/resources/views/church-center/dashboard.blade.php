@@ -18,7 +18,8 @@
  <p>Status WhatsApp: {{ $counts[$church->id]['whatsapp'] }}</p>
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.contacts.index', $church->id) }}">Kelola Kontak →</a>
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.tickets.index', $church->id) }}">Tiket Bantuan →</a>
- <a class="button secondary" style="margin-top:16px" href="{{ route('churches.automations.index', $church->id) }}">Draft Otomatisasi →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.automations.index', $church->id) }}">Draft Otomatisasi →</a>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.licenses.index', $church->id) }}">Lisensi Gereja →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
 </article>
 @empty
 <article class="feature glass"><span class="emoji">✨</span><h2>Belum ada gereja</h2><p>Buat gereja pertama untuk memulai.</p></article>
