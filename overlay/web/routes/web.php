@@ -16,6 +16,8 @@ use App\Http\Controllers\ContactConsentController;
 use App\Http\Controllers\AdminUsersController;
 use App\Http\Controllers\TicketReplyController;
 use App\Http\Controllers\ContactEditController;
+use App\Http\Controllers\BroadcastController;
+use App\Http\Controllers\BirthdaySettingsController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,5 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tickets/{ticketId}', [TicketReplyController::class, 'show'])->whereNumber('ticketId')->name('tickets.show');
     Route::post('/tickets/{ticketId}/reply', [TicketReplyController::class, 'store'])->whereNumber('ticketId')->middleware('throttle:10,1')->name('tickets.reply');
     Route::patch('/churches/{churchId}/contacts/{contactId}', [ContactEditController::class, 'update'])->whereNumber('churchId')->whereNumber('contactId')->name('churches.contacts.update');
+    Route::get('/churches/{churchId}/broadcast', [BroadcastController::class, 'index'])->whereNumber('churchId')->name('churches.broadcast.index');
+    Route::post('/churches/{churchId}/broadcast', [BroadcastController::class, 'store'])->whereNumber('churchId')->middleware('throttle:2,1')->name('churches.broadcast.store');
+    Route::post('/churches/{churchId}/birthday-settings', [BirthdaySettingsController::class, 'update'])->whereNumber('churchId')->name('churches.birthday.update');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
