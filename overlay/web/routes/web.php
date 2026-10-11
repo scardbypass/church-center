@@ -9,6 +9,7 @@ use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\AdminPaymentsController;
 use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\AdminChurchesController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,5 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/churches/{churchId}/whatsapp', [WhatsAppController::class, 'index'])->whereNumber('churchId')->name('churches.whatsapp.index');
     Route::post('/churches/{churchId}/whatsapp/connect', [WhatsAppController::class, 'connect'])->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.whatsapp.connect');
     Route::post('/churches/{churchId}/whatsapp/disconnect', [WhatsAppController::class, 'disconnect'])->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.whatsapp.disconnect');
+    Route::post('/churches/{churchId}/automations/{jobId}/activate', [AutomationController::class, 'activate'])->whereNumber('churchId')->whereNumber('jobId')->middleware('throttle:10,1')->name('churches.automations.activate');
+    Route::get('/admin/churches', [AdminChurchesController::class, 'index'])->name('admin.churches.index');
+    Route::patch('/admin/churches/{churchId}/toggle', [AdminChurchesController::class, 'toggle'])->whereNumber('churchId')->name('admin.churches.toggle');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
