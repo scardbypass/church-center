@@ -30,3 +30,24 @@ Only **manual license request and admin approval** are implemented. No verified 
 4. Test Google OAuth, church separation, QR scanning, reconnect, message receipt, consent enforcement, license expiration, payment approvals and backup restoration on staging.
 5. Review Nginx/TLS, CSRF, session cookies, security headers, queue operations, monitoring, log rotation and backups.
 6. Do not claim release complete until these tests pass and missing features above are implemented.
+
+## Daily recurring IH (code added; staging verification required)
+
+The Fulltime dashboard has an **Auto IH Harian** page. Each morning/noon/evening rule is independent and disabled by default. Rules accept opted-in direct contacts only, with local HH:MM and the church timezone. `church:generate-recurring` inserts at most one due message per rule per local date, using a unique idempotency key. `church:dispatch` sends queued messages only for active churches with an active license and valid consent.
+
+Run both commands each minute **only after completing staging tests**:
+
+```cron
+* * * * * cd /absolute/path/church-center/apps/web && /usr/bin/php artisan church:generate-recurring >> /var/log/church-center-generate.log 2>&1
+* * * * * cd /absolute/path/church-center/apps/web && /usr/bin/php artisan church:dispatch --limit=20 >> /var/log/church-center-dispatch.log 2>&1
+```
+
+The commands are not installed in cron automatically. Configure log rotation. For high concurrency, add a distributed lock and provider-level rate limiting before using multiple scheduler instances. Stop the scheduler during database restore.
+
+## MariaDB backup
+
+`bash scripts/backup-database.sh` creates a compressed `mariadb-dump` using the database credentials from the Laravel `.env`, in a private backup directory. The script is intended for local trusted administrators and has **not been executed on the VPS**. Use `BACKUP_DIR=/secure/offsite/staging` to set a non-public destination. Validate the checksum and test restoring into a separate database. Back up Laravel `APP_KEY` securely and worker session files separately; neither is included in this script.
+
+## Still not implemented
+
+Provider-verified QRIS (awaiting official GoPay Merchant API specification and sandbox credentials), authenticated payment webhooks, refund/reconciliation, verified opt-out and group broadcast compliance, contact imports, complete tenant-aware analytics, central admin user controls, secure whole-system one-click restore and end-to-end provider tests. Do not mark these as complete.
