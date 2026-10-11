@@ -30,6 +30,10 @@ class GoogleAuthController extends Controller
         $email = $google->getEmail();
         abort_unless($email && filter_var($email, FILTER_VALIDATE_EMAIL), 422, 'Google tidak memberikan email valid.');
 
+        $profile = $google->user ?? [];
+        $verified = $profile['email_verified'] ?? $profile['verified_email'] ?? false;
+        abort_unless($verified === true, 403, 'Alamat email Google belum terverifikasi.');
+
         $existing = User::where('google_id', $google->getId())->first();
         if (! $existing) {
             // Never silently link an existing account by email: it must be linked by a verified, authenticated user.
