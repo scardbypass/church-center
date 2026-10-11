@@ -31,3 +31,22 @@ curl -sS -H "Authorization: Bearer $WORKER_API_TOKEN" http://127.0.0.1:31181/chu
 **Critical production gaps:** This worker is not yet connected to Laravel's tenant/role/consent/license enforcement; it must not be exposed to the internet or untrusted users. QR presentation in the web dashboard, scheduled queue delivery, opt-out, rate limits, group targeting authorization, retry guarantees, media, encrypted session backups, webhook verification, and integration tests are not complete. The worker's basic `menu` response is hard-coded, not the configurable church FAQ. PM2 and provider connectivity have not been tested on the user's VPS. Baileys dependency versions need lockfile generation and security review during deployment.
 
 Do not enable scheduled or bulk sending until tenant-scoped authorization and consent enforcement are integrated.
+
+## Laravel integration
+
+Set the **same** secret in the Laravel environment and worker environment:
+
+```dotenv
+# Laravel apps/web/.env
+CHURCH_WORKER_URL=http://127.0.0.1:31181
+CHURCH_WORKER_TOKEN=replace-with-a-random-64-character-hex-secret
+```
+
+```bash
+cd church-center/apps/web
+php artisan optimize:clear
+```
+
+The authenticated Fulltime dashboard now links to `/churches/{id}/whatsapp`, where a member can request connection, see state, and disconnect. All requests are checked against church membership on the Laravel side and forwarded to the loopback worker with a server-side token. **QR is not yet rendered as a scannable image**; connection cannot be completed through this web interface alone. Never publish the raw QR payload.
+
+**Worker startup requires** `npm install` and a configured `WORKER_API_TOKEN`. If PM2 has not been configured with the token, it will fail fast rather than run unsecured. The worker and Laravel integration are not yet production validated.
