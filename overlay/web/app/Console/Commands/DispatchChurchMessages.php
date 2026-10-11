@@ -23,6 +23,8 @@ class DispatchChurchMessages extends Command
         $ids = DB::table('church_automation_jobs')->where('status', 'queued')
             ->where('scheduled_at', '<=', now())->orderBy('scheduled_at')->limit($limit)->pluck('id');
         foreach ($ids as $id) {
+            // Conservative global pacing for the local worker.
+            usleep(1500000);
             $job = DB::transaction(function () use ($id) {
                 $job = DB::table('church_automation_jobs')->where('id', $id)->lockForUpdate()->first();
                 if (!$job || $job->status !== 'queued' || $job->scheduled_at > now()) return null;
@@ -40,9 +42,9 @@ class DispatchChurchMessages extends Command
                         ]);
                         return null;
                     }
-                } elseif (!preg_match('/^[0-9-]+@g\.us$/', $job->target)) {
+                } else {
                     DB::table('church_automation_jobs')->where('id', $id)->update([
-                        'status' => 'blocked', 'last_error' => 'Invalid recipient', 'updated_at' => now(),
+                        'status' => 'blocked', 'last_error' => 'Group or invalid recipient is not approved for automated sends', 'updated_at' => now(),
                     ]);
                     return null;
                 }
