@@ -16,7 +16,11 @@
     <a href="{{ route('features') }}">Fitur</a>
     <a href="{{ route('pricing') }}">Lisensi</a>
   </nav>
-  <a class="nav-cta" href="mailto:hello@example.invalid?subject=Church%20Center">Hubungi Kami</a>
+  @auth
+  <a class="nav-cta" href="{{ route('dashboard') }}">Dashboard</a>
+  @else
+  <a class="nav-cta" href="{{ route('login') }}">Masuk</a>
+  @endauth
 </header>
 <main>@yield('content')</main>
 <footer class="footer"><div><strong>✦ Church Center</strong><p>Komunikasi gereja lebih tertata, pelayanan lebih terhubung.</p></div><span>© {{ date('Y') }} Church Center · Starter Preview</span></footer>
