@@ -11,6 +11,11 @@
 <label>Jadwal (kosongkan untuk sekarang) <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}"></label>
 @if($errors->any())<p role="alert">{{ $errors->first() }}</p>@endif
 <button class="button primary" onclick="return confirm('Antrekan broadcast untuk semua kontak yang telah menyetujui?')">Antrekan Broadcast</button></form></section>
+<section class="wrap glass" style="padding:24px;border-radius:24px;margin-bottom:25px">
+<h2>Ucapan ulang tahun otomatis</h2><p>Gunakan {name} untuk nama jemaat. Kosongkan pesan untuk mematikan. Pengiriman hanya kepada kontak yang memberi persetujuan.</p>
+<form method="POST" action="{{ route('churches.birthday.update', $church->id) }}">@csrf
+<textarea name="message" maxlength="4500" rows="4" style="width:100%">{{ old('message', $birthdayMessage) }}</textarea>
+<button class="button secondary">Simpan Pengaturan</button></form></section>
 <section class="wrap" style="padding-bottom:70px"><h2>Riwayat per penerima</h2>
 @foreach($jobs as $job)<article class="glass" style="padding:16px;border-radius:16px;margin-bottom:10px">
 <p>{{ $job->target }} · {{ $job->status }} · {{ $job->scheduled_at }}</p>
