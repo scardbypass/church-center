@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Church Center worker foundation; WhatsApp transport not yet integrated",
+  "description": "Church Center multi-tenant WhatsApp worker",
+  "dependencies": {"@whiskeysockets/baileys": "^6.7.21"},
   "scripts": {
     "start": "node chiwa.js",
     "check": "node --check chiwa.js",
