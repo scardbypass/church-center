@@ -1,0 +1,15 @@
+{
+  "name": "church-center-whatsapp-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Church Center worker foundation; WhatsApp transport not yet integrated",
+  "scripts": {
+    "start": "node chiwa.js",
+    "check": "node --check chiwa.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
