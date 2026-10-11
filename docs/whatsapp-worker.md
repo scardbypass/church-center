@@ -28,7 +28,7 @@ Example (run locally on VPS, replace placeholders):
 curl -sS -H "Authorization: Bearer $WORKER_API_TOKEN" http://127.0.0.1:31181/churches/1/status
 ```
 
-**Critical production gaps:** This worker is not yet connected to Laravel's tenant/role/consent/license enforcement; it must not be exposed to the internet or untrusted users. QR presentation in the web dashboard, scheduled queue delivery, opt-out, rate limits, group targeting authorization, retry guarantees, media, encrypted session backups, webhook verification, and integration tests are not complete. The worker's basic `menu` response is hard-coded, not the configurable church FAQ. PM2 and provider connectivity have not been tested on the user's VPS. Baileys dependency versions need lockfile generation and security review during deployment.
+**Critical production gaps:** This worker is not yet connected to Laravel's tenant/role/consent/license enforcement; it must not be exposed to the internet or untrusted users. QR end-to-end testing, scheduled queue delivery, opt-out, rate limits, group targeting authorization, retry guarantees, media, encrypted session backups, webhook verification, and integration tests are not complete. The worker's basic `menu` response is hard-coded, not the configurable church FAQ. PM2 and provider connectivity have not been tested on the user's VPS. Baileys dependency versions need lockfile generation and security review during deployment.
 
 Do not enable scheduled or bulk sending until tenant-scoped authorization and consent enforcement are integrated.
 
@@ -47,6 +47,12 @@ cd church-center/apps/web
 php artisan optimize:clear
 ```
 
-The authenticated Fulltime dashboard now links to `/churches/{id}/whatsapp`, where a member can request connection, see state, and disconnect. All requests are checked against church membership on the Laravel side and forwarded to the loopback worker with a server-side token. **QR is not yet rendered as a scannable image**; connection cannot be completed through this web interface alone. Never publish the raw QR payload.
+The authenticated Fulltime dashboard now links to `/churches/{id}/whatsapp`, where a member can request connection, see state, and disconnect. All requests are checked against church membership on the Laravel side and forwarded to the loopback worker with a server-side token. **QR is now rendered locally as a scannable image** in the authenticated dashboard using the worker's private `/qr` endpoint. This flow has not yet been verified against a real WhatsApp account on the VPS. Never publish the raw QR payload.
 
 **Worker startup requires** `npm install` and a configured `WORKER_API_TOKEN`. If PM2 has not been configured with the token, it will fail fast rather than run unsecured. The worker and Laravel integration are not yet production validated.
+
+## QR scan update
+
+After `npm install` (Baileys and `qrcode`), restart the PM2 worker with its configured token. Open the church's WhatsApp dashboard, click **Hubungkan**, then refresh until the QR image appears. In WhatsApp, choose **Perangkat tertaut → Tautkan perangkat** and scan it. The QR is rendered on the VPS, passed only over the internal authenticated API, and embedded on a member-only page with `Cache-Control: private, no-store`. Do not screenshot or forward QR codes.
+
+Run tests from Laravel: `php artisan test --filter=WhatsAppAccessTest`. This verifies tenant access and mocked QR proxy only, not real WhatsApp delivery.
