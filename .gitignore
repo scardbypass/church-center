@@ -1,0 +1,15 @@
+/apps/web/
+/apps/whatsapp-worker/node_modules/
+/node_modules/
+/vendor/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+/storage/
+/sessions/
+/auth_state/
+/backups/
+*.log
+.DS_Store
