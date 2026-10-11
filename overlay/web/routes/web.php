@@ -11,6 +11,8 @@ use App\Http\Controllers\AdminPaymentsController;
 use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\AdminChurchesController;
 use App\Http\Controllers\RecurringMessageController;
+use App\Http\Controllers\ContactImportController;
+use App\Http\Controllers\ContactConsentController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,5 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/churches/{churchId}/recurring', [RecurringMessageController::class, 'store'])->whereNumber('churchId')->middleware('throttle:10,1')->name('churches.recurring.store');
     Route::patch('/churches/{churchId}/recurring/{ruleId}/toggle', [RecurringMessageController::class, 'toggle'])->whereNumber('churchId')->whereNumber('ruleId')->name('churches.recurring.toggle');
     Route::delete('/churches/{churchId}/recurring/{ruleId}', [RecurringMessageController::class, 'destroy'])->whereNumber('churchId')->whereNumber('ruleId')->name('churches.recurring.destroy');
+    Route::post('/churches/{churchId}/contacts/import', [ContactImportController::class, 'store'])->whereNumber('churchId')->middleware('throttle:3,1')->name('churches.contacts.import');
+    Route::patch('/churches/{churchId}/contacts/{contactId}/revoke', [ContactConsentController::class, 'revoke'])->whereNumber('churchId')->whereNumber('contactId')->name('churches.contacts.revoke');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
