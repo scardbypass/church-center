@@ -4,7 +4,7 @@
 <section class="wrap page-heading" style="text-align:left">
 <a href="{{ route('dashboard') }}">← Dashboard</a>
 <h1 style="font-size:clamp(32px,5vw,52px)">Jadwal & Otomatisasi</h1>
-<p>{{ $church->name }} · Jadwal tersimpan sebagai draft dan tidak akan dikirim sebelum koneksi WhatsApp serta kontrol lisensi selesai.</p>
+<p>{{ $church->name }} · Jadwal perlu diaktifkan. Pengiriman memerlukan lisensi aktif, koneksi WhatsApp, dan scheduler VPS.</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 </section>
 <section class="wrap glass" style="padding:24px;border-radius:24px;margin-bottom:28px">
@@ -29,7 +29,7 @@
 <h3>{{ $job->kind }} · {{ $job->status }}</h3>
 <p>Tujuan: {{ $job->target }} · {{ $job->scheduled_at }}</p>
 <p style="white-space:pre-wrap">{{ $job->message }}</p>
-@if($job->status === 'draft')<form method="POST" action="{{ route('churches.automations.destroy', [$church->id, $job->id]) }}">@csrf @method('DELETE')<button>Hapus draft</button></form>@endif
+@if($job->status === 'draft')<form method="POST" action="{{ route('churches.automations.activate', [$church->id, $job->id]) }}">@csrf<button class="button primary">Aktifkan Jadwal</button></form><form method="POST" action="{{ route('churches.automations.destroy', [$church->id, $job->id]) }}">@csrf @method('DELETE')<button>Hapus draft</button></form>@endif
 </article>
 @empty<p>Belum ada draft jadwal.</p>@endforelse
 {{ $jobs->links() }}
