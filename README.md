@@ -24,8 +24,8 @@
 | Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Login Google dasar dibuat, belum diuji; undangan belum |
 | Kontak | Input manual, CSV/Excel, Google Contacts, consent, deduplikasi | Belum |
 | Bot WhatsApp | QR/pairing per gereja, koneksi, `menu`/`start`, balasan otomatis, FAQ | Worker health-only; integrasi WA belum |
-| Auto IH | Pagi/siang/malam, target grup, jadwal, preview, ON/OFF masing-masing | Belum |
-| Broadcast | Langsung, terjadwal, berulang, media, antrean, log | Belum |
+| Auto IH | Pagi/siang/malam, target grup, jadwal, preview, ON/OFF masing-masing | Form draft jadwal tersedia; **pengiriman belum** |
+| Broadcast | Langsung, terjadwal, berulang, media, antrean, log | Form draft jadwal tersedia; **pengiriman belum** |
 | Pengingat | Ibadah mingguan, acara khusus, H-7/H-3/H-1, ulang tahun | Belum |
 | Backup | Backup pengaturan manual/terjadwal dan restore selektif | Belum |
 | Lisensi | Satu tier fitur, durasi 1/3/6/12 bulan, harga dari Admin | Struktur database ada; aktivasi/renewal belum |
@@ -285,3 +285,9 @@ $user->save();
 ```
 
 Jangan berikan role Admin Pusat melalui formulir pendaftaran publik. Audit log, manajemen role, balasan tiket, lampiran, transaksi, serta integrasi bot dan pembayaran masih harus dibuat. Status tabel di atas menggambarkan **kode yang ditulis**, bukan hasil pengujian VPS.
+
+## Otomatisasi: draft aman, belum terkirim
+
+Menu **Draft Otomatisasi** dari dashboard gereja dapat menyimpan jadwal IH pagi/siang/malam, broadcast, dan pengingat ke database terisolasi per gereja. Setiap draft memakai ID idempotensi unik. Status awal selalu `draft`; **tidak ada worker pengiriman** dan tidak ada pesan yang terkirim. Input waktu saat ini memerlukan format `YYYY-MM-DD HH:MM:SS` mengikuti timezone aplikasi; untuk produksi, pengaturan timezone gereja dan konversi UTC harus diselesaikan.
+
+**Belum boleh digunakan untuk pemberitahuan sungguhan.** Modul berikutnya harus menambahkan penghubung WhatsApp yang terautentikasi, penyimpanan sesi terenkripsi, koneksi dan reconnect, validasi lisensi dan consent, queue atomik, pengiriman dengan batas laju, deduplikasi, retry, audit, dan tes integrasi. Tidak boleh mengubah semua draft menjadi aktif sebelum pengujian dan persetujuan pengirim.
