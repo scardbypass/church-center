@@ -14,7 +14,7 @@ fi
 cp -R overlay/web/. apps/web/
 cd apps/web
 if [[ ! -f .env ]]; then cp .env.example .env; fi
-php artisan key:generate --force
+if ! grep -Eq "^APP_KEY=base64:.+" .env; then php artisan key:generate --force; fi
 # SQLite is suitable for an initial single-server installation; configure MariaDB for production.
 touch database/database.sqlite
 php -r '$p=".env";$s=file_get_contents($p);$s=preg_replace("/^DB_CONNECTION=.*/m","DB_CONNECTION=sqlite",$s);file_put_contents($p,$s);'
