@@ -15,6 +15,7 @@
 </section>
 <section class="wrap" style="padding:35px 0 70px">
 <a class="button primary" href="{{ route('admin.payments.index') }}">Tinjau Permintaan Lisensi →</a>
+<p><a class="button secondary" href="{{ route('admin.churches.index') }}">Kelola Semua Gereja →</a></p>
 <h2>Tiket terbaru</h2>
 @forelse($tickets as $ticket)
 <article class="glass" style="padding:22px;border-radius:20px;margin-bottom:12px">
