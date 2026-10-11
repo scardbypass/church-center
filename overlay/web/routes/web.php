@@ -14,6 +14,7 @@ use App\Http\Controllers\RecurringMessageController;
 use App\Http\Controllers\ContactImportController;
 use App\Http\Controllers\ContactConsentController;
 use App\Http\Controllers\AdminUsersController;
+use App\Http\Controllers\TicketReplyController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -64,5 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/churches/{churchId}/contacts/{contactId}/revoke', [ContactConsentController::class, 'revoke'])->whereNumber('churchId')->whereNumber('contactId')->name('churches.contacts.revoke');
     Route::get('/admin/users', [AdminUsersController::class, 'index'])->name('admin.users.index');
     Route::patch('/admin/users/{userId}/role', [AdminUsersController::class, 'setRole'])->whereNumber('userId')->middleware('throttle:10,1')->name('admin.users.role');
+    Route::get('/tickets/{ticketId}', [TicketReplyController::class, 'show'])->whereNumber('ticketId')->name('tickets.show');
+    Route::post('/tickets/{ticketId}/reply', [TicketReplyController::class, 'store'])->whereNumber('ticketId')->middleware('throttle:10,1')->name('tickets.reply');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
