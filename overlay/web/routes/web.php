@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\AdminPaymentsController;
+use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,5 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/payments', [AdminPaymentsController::class, 'index'])->name('admin.payments.index');
     Route::post('/admin/payments/{paymentId}/approve', [AdminPaymentsController::class, 'approve'])->whereNumber('paymentId')->name('admin.payments.approve');
     Route::post('/admin/payments/{paymentId}/reject', [AdminPaymentsController::class, 'reject'])->whereNumber('paymentId')->name('admin.payments.reject');
+    Route::get('/churches/{churchId}/whatsapp', [WhatsAppController::class, 'index'])->whereNumber('churchId')->name('churches.whatsapp.index');
+    Route::post('/churches/{churchId}/whatsapp/connect', [WhatsAppController::class, 'connect'])->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.whatsapp.connect');
+    Route::post('/churches/{churchId}/whatsapp/disconnect', [WhatsAppController::class, 'disconnect'])->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.whatsapp.disconnect');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
