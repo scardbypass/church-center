@@ -7,6 +7,7 @@
   <p class="lead" style="margin:0">Kelola gereja yang terhubung dengan akun Anda. Data setiap gereja terpisah.</p>
   @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
 </section>
+@if($user->platform_role === 'admin')<section class="wrap"><a class="button primary" href="{{ route('admin.index') }}">Buka Admin Pusat →</a></section>@endif
 <section class="wrap grid">
 @forelse($churches as $church)
 <article class="feature glass">
@@ -15,7 +16,8 @@
  <p>Peran: {{ ucfirst($church->role) }}</p>
  <p>Kontak: {{ $counts[$church->id]['contacts'] }}</p>
  <p>Status WhatsApp: {{ $counts[$church->id]['whatsapp'] }}</p>
- <a class="button secondary" style="margin-top:16px" href="{{ route('churches.contacts.index', $church->id) }}">Kelola Kontak →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.contacts.index', $church->id) }}">Kelola Kontak →</a>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.tickets.index', $church->id) }}">Tiket Bantuan →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
 </article>
 @empty
 <article class="feature glass"><span class="emoji">✨</span><h2>Belum ada gereja</h2><p>Buat gereja pertama untuk memulai.</p></article>
