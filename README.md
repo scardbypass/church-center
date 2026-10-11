@@ -2,12 +2,15 @@
 
 **Church Center** adalah proyek SaaS multi-gereja untuk tim Fulltime dan Admin Pusat, dengan rencana otomasi WhatsApp, renungan, jadwal ibadah, pengingat, lisensi, dan pembayaran.
 
-> **Status implementasi: Starter / fase 1.** Halaman publik Beranda, Fitur, Lisensi, dan endpoint `/health` sudah dibuat. **Login, dashboard, koneksi WhatsApp, database multi-tenant, pembayaran, serta otomatisasi belum dibuat.** Jangan gunakan starter ini untuk transaksi nyata atau data jemaat produksi.
+> **Status implementasi: Starter / fase 1 (schema tenant + worker health PM2).** Halaman publik Beranda, Fitur, Lisensi, dan endpoint `/health` sudah dibuat. **Login, dashboard, koneksi WhatsApp, database multi-tenant, pembayaran, serta otomatisasi belum dibuat.** Jangan gunakan starter ini untuk transaksi nyata atau data jemaat produksi.
 
 ## Sudah ada sekarang
 - Halaman landing responsif bergaya iOS-inspired Liquid Glass, CSS dipisah dari Blade.
 - Halaman katalog roadmap fitur dan lisensi (harga belum aktif).
 - Endpoint pemeriksaan `GET /health` (JSON).
+- Migration fondasi `churches`, `church_memberships`, `church_settings`, `church_contacts`, `church_whatsapp_connections`.
+- Node worker `apps/whatsapp-worker/chiwa.js` yang bisa dijalankan PM2, saat ini **health-only**, belum terhubung WhatsApp.
+- Panduan domain, TLS, PM2: [docs/domain-and-pm2.md](docs/domain-and-pm2.md).
 - Skrip `install.sh` untuk membuat Laravel 12 baru dan menerapkan overlay.
 - Dokumentasi instalasi Debian 12 + Nginx + PHP-FPM.
 
@@ -17,9 +20,9 @@
 |---|---|---|
 | Admin Pusat | Kelola gereja, Fulltime, harga, lisensi, transaksi, monitoring, tiket, maintenance, kontrol global | Belum |
 | Fulltime | Dashboard gereja, tim, izin, konfigurasi semua layanan | Belum |
-| Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Belum |
+| Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Schema awal; login belum |
 | Kontak | Input manual, CSV/Excel, Google Contacts, consent, deduplikasi | Belum |
-| Bot WhatsApp | QR/pairing per gereja, koneksi, `menu`/`start`, balasan otomatis, FAQ | Belum |
+| Bot WhatsApp | QR/pairing per gereja, koneksi, `menu`/`start`, balasan otomatis, FAQ | Worker health-only; integrasi WA belum |
 | Auto IH | Pagi/siang/malam, target grup, jadwal, preview, ON/OFF masing-masing | Belum |
 | Broadcast | Langsung, terjadwal, berulang, media, antrean, log | Belum |
 | Pengingat | Ibadah mingguan, acara khusus, H-7/H-3/H-1, ulang tahun | Belum |
@@ -143,7 +146,7 @@ curl -I https://church.example.com/features
 curl -I https://church.example.com/pricing
 ```
 
-Halaman akan terlihat jika DNS, Nginx, PHP-FPM, dan TLS sudah benar. **Starter ini tidak membutuhkan PM2**, karena worker WhatsApp belum dibuat.
+Halaman akan terlihat jika DNS, Nginx, PHP-FPM, dan TLS sudah benar. **PM2 dapat menjalankan fondasi worker Node** (belum koneksi WhatsApp). Lihat [panduan PM2](docs/domain-and-pm2.md).
 
 ### 5. Update dari GitHub
 
