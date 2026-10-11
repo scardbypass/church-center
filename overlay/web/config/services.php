@@ -14,6 +14,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'church_worker' => [
+        'url' => env('CHURCH_WORKER_URL', 'http://127.0.0.1:31181'),
+        'token' => env('CHURCH_WORKER_TOKEN'),
+    ],
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
