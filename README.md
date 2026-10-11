@@ -28,8 +28,8 @@
 | Broadcast | Langsung, terjadwal, berulang, media, antrean, log | Form draft jadwal tersedia; **pengiriman belum** |
 | Pengingat | Ibadah mingguan, acara khusus, H-7/H-3/H-1, ulang tahun | Belum |
 | Backup | Backup pengaturan manual/terjadwal dan restore selektif | Belum |
-| Lisensi | Satu tier fitur, durasi 1/3/6/12 bulan, harga dari Admin | Struktur database ada; aktivasi/renewal belum |
-| Pembayaran | Transfer manual dengan bukti dan ACC Admin, QRIS GoPay Merchant setelah verifikasi SDK | Struktur database ada; proses pembayaran belum |
+| Lisensi | Satu tier fitur, durasi 1/3/6/12 bulan, harga dari Admin | Permintaan dan aktivasi manual oleh Admin sudah ditulis; belum diuji |
+| Pembayaran | Transfer manual dengan bukti dan ACC Admin, QRIS GoPay Merchant setelah verifikasi SDK | Permintaan manual + persetujuan Admin sudah ditulis; **belum ada upload bukti, verifikasi otomatis, atau QRIS** |
 | Bantuan | Tiket Fulltime ke Admin dengan lampiran dan status | Buat, lihat, tutup tiket dasar tersedia dalam kode; balasan/lampiran belum |
 | Operasional | Kontrol global, maintenance website/bot, emergency stop, audit | Belum |
 
@@ -291,3 +291,23 @@ Jangan berikan role Admin Pusat melalui formulir pendaftaran publik. Audit log, 
 Menu **Draft Otomatisasi** dari dashboard gereja dapat menyimpan jadwal IH pagi/siang/malam, broadcast, dan pengingat ke database terisolasi per gereja. Setiap draft memakai ID idempotensi unik. Status awal selalu `draft`; **tidak ada worker pengiriman** dan tidak ada pesan yang terkirim. Input waktu saat ini memerlukan format `YYYY-MM-DD HH:MM:SS` mengikuti timezone aplikasi; untuk produksi, pengaturan timezone gereja dan konversi UTC harus diselesaikan.
 
 **Belum boleh digunakan untuk pemberitahuan sungguhan.** Modul berikutnya harus menambahkan penghubung WhatsApp yang terautentikasi, penyimpanan sesi terenkripsi, koneksi dan reconnect, validasi lisensi dan consent, queue atomik, pengiriman dengan batas laju, deduplikasi, retry, audit, dan tes integrasi. Tidak boleh mengubah semua draft menjadi aktif sebelum pengujian dan persetujuan pengirim.
+
+## Permintaan lisensi dan persetujuan Admin
+
+Fulltime mengajukan durasi 1/3/6/12 bulan dari menu **Lisensi Gereja**. Admin Pusat membuka **Permintaan Lisensi**, melakukan verifikasi pembayaran **di luar sistem** terlebih dahulu, lalu menyetujui atau menolak. Persetujuan dilakukan dalam transaksi database dengan lock untuk mencegah permintaan yang sama disetujui dua kali; perpanjangan menambah masa berlaku dari tanggal berakhir yang masih aktif.
+
+**Tidak ada integrasi bank, bukti transfer, QRIS, webhook, atau harga final.** Tombol persetujuan hanya digunakan oleh Admin yang sudah memverifikasi dana secara independen. Fitur ini belum diuji dengan database produksi dan tidak boleh dipakai menerima uang pelanggan sebelum pemeriksaan end-to-end.
+
+### Pembaruan kode
+
+```bash
+cd church-center
+git pull --ff-only
+cp -R overlay/web/. apps/web/
+cd apps/web
+php artisan migrate --force
+php artisan test
+php artisan optimize:clear
+```
+
+Jika test gagal, hentikan deployment dan kirim log error yang sudah disamarkan. **Jangan memasukkan API key, OAuth secret, atau informasi jemaat ke log publik.**
