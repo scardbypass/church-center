@@ -6,6 +6,8 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AutomationController;
+use App\Http\Controllers\LicenseController;
+use App\Http\Controllers\AdminPaymentsController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,5 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/churches/{churchId}/automations', [AutomationController::class, 'index'])->whereNumber('churchId')->name('churches.automations.index');
     Route::post('/churches/{churchId}/automations', [AutomationController::class, 'store'])->whereNumber('churchId')->middleware('throttle:10,1')->name('churches.automations.store');
     Route::delete('/churches/{churchId}/automations/{jobId}', [AutomationController::class, 'destroy'])->whereNumber('churchId')->whereNumber('jobId')->name('churches.automations.destroy');
+    Route::get('/churches/{churchId}/licenses', [LicenseController::class, 'index'])->whereNumber('churchId')->name('churches.licenses.index');
+    Route::post('/churches/{churchId}/licenses/request', [LicenseController::class, 'request'])->whereNumber('churchId')->middleware('throttle:3,1')->name('churches.licenses.request');
+    Route::get('/admin/payments', [AdminPaymentsController::class, 'index'])->name('admin.payments.index');
+    Route::post('/admin/payments/{paymentId}/approve', [AdminPaymentsController::class, 'approve'])->whereNumber('paymentId')->name('admin.payments.approve');
+    Route::post('/admin/payments/{paymentId}/reject', [AdminPaymentsController::class, 'reject'])->whereNumber('paymentId')->name('admin.payments.reject');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
