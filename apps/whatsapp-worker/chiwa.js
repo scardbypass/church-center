@@ -2,6 +2,7 @@ import http from 'node:http';
 import { timingSafeEqual } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import QRCode from 'qrcode';
 import makeWASocket, { DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 
 const host = process.env.WORKER_HOST || '127.0.0.1';
@@ -31,7 +32,7 @@ function authorized(req) {
 function validChurch(id) { return /^[1-9][0-9]{0,9}$/.test(String(id)); }
 function state(id) {
   const c = connections.get(id);
-  return c ? { church_id: id, status: c.status, qr: c.qr, last_error: c.lastError || null } : { church_id: id, status: 'disconnected', qr: null };
+  return c ? { church_id: id, status: c.status, qr_ready: Boolean(c.qr), last_error: c.lastError || null } : { church_id: id, status: 'disconnected', qr_ready: false };
 }
 async function connect(id) {
   if (!validChurch(id)) throw Error('invalid_church_id');
@@ -95,11 +96,17 @@ const server = http.createServer(async (req, res) => {
   }
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized' });
   const url = new URL(req.url, 'http://localhost');
-  const match = /^\/churches\/([1-9][0-9]{0,9})(?:\/(connect|status|send|disconnect))?$/.exec(url.pathname);
+  const match = /^\/churches\/([1-9][0-9]{0,9})(?:\/(connect|status|qr|send|disconnect))?$/.exec(url.pathname);
   if (!match) return json(res, 404, { error: 'not_found' });
   const [, id, action] = match;
   try {
     if (req.method === 'GET' && action === 'status') return json(res, 200, state(id));
+    if (req.method === 'GET' && action === 'qr') {
+      const qr = connections.get(id)?.qr;
+      if (!qr) return json(res, 404, { error: 'qr_not_ready' });
+      const image = await QRCode.toDataURL(qr, { errorCorrectionLevel: 'M', margin: 2, width: 320 });
+      return json(res, 200, { image });
+    }
     if (req.method === 'POST' && action === 'connect') return json(res, 202, await connect(id));
     if (req.method === 'POST' && action === 'disconnect') {
       const c = connections.get(id);
