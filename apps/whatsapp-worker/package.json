@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Church Center multi-tenant WhatsApp worker",
-  "dependencies": {"@whiskeysockets/baileys": "^6.7.21"},
+  "dependencies": {"@whiskeysockets/baileys": "^6.7.21", "qrcode": "^1.5.4"},
   "scripts": {
     "start": "node chiwa.js",
     "check": "node --check chiwa.js",
