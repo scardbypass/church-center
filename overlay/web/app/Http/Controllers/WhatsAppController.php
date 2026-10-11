@@ -38,7 +38,20 @@ class WhatsAppController extends Controller
     {
         $church = $this->church($request, $churchId);
         $status = $this->worker('GET', $churchId, 'status');
-        return view('church-center.whatsapp', compact('church', 'status'));
+        $qrImage = null;
+        if (($status['qr_ready'] ?? false) === true) {
+            try {
+                $qr = $this->worker('GET', $churchId, 'qr');
+                $candidate = $qr['image'] ?? null;
+                if (is_string($candidate) && preg_match('~^data:image/png;base64,[A-Za-z0-9+/=]+$~', $candidate) && strlen($candidate) < 200000) {
+                    $qrImage = $candidate;
+                }
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                // QR can expire between status and image fetch.
+            }
+        }
+        return response()->view('church-center.whatsapp', compact('church', 'status', 'qrImage'))
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function connect(Request $request, int $churchId)
