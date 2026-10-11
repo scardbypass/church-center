@@ -9,8 +9,11 @@
 </section>
 <section class="wrap glass" style="padding:24px;border-radius:24px;margin-bottom:60px">
 <p>Gunakan nomor WhatsApp yang dikelola gereja. QR adalah kredensial login: jangan dibagikan kepada orang lain.</p>
-@if(($status['status'] ?? '') === 'qr_ready' && !empty($status['qr']))
-<p>QR tersedia di worker. Tampilan kode QR yang dapat dipindai belum diintegrasikan; jangan menyalin token QR ke layanan pembuat QR publik.</p>
+@if(($status['status'] ?? '') === 'qr_ready' && !empty($qrImage))
+<div style="max-width:340px;padding:12px;background:white;border-radius:16px"><img src="{{ $qrImage }}" width="320" height="320" alt="Kode QR untuk menghubungkan WhatsApp gereja" style="max-width:100%;height:auto"></div>
+<p>Buka WhatsApp → Perangkat tertaut → Tautkan perangkat, lalu pindai QR ini. QR kedaluwarsa otomatis; muat ulang jika diperlukan.</p>
+@elseif(($status['status'] ?? '') === 'qr_ready')
+<p>QR sedang disiapkan. Muat ulang halaman.</p>
 @elseif(($status['status'] ?? '') === 'connected')
 <p>WhatsApp terhubung. Pengiriman otomatis masih dinonaktifkan sampai pemeriksaan izin, lisensi, dan antrean selesai.</p>
 @endif
