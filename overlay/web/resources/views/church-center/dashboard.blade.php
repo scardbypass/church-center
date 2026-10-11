@@ -20,7 +20,7 @@
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.tickets.index', $church->id) }}">Tiket Bantuan →</a>
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.automations.index', $church->id) }}">Draft Otomatisasi →</a>
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.licenses.index', $church->id) }}">Lisensi Gereja →</a>
- <a class="button secondary" style="margin-top:16px" href="{{ route('churches.whatsapp.index', $church->id) }}">Koneksi WhatsApp →</a>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.whatsapp.index', $church->id) }}">Koneksi WhatsApp →</a><a class="button secondary" style="margin-top:16px" href="{{ route('churches.broadcast.index', $church->id) }}">Broadcast & Ulang Tahun →</a>
  <a class="button secondary" style="margin-top:16px" href="{{ route('churches.recurring.index', $church->id) }}">Auto IH Harian →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
 </article>
 @empty
