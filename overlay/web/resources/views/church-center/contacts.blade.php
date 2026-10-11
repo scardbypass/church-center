@@ -32,7 +32,12 @@
 <tbody>
 @forelse($contacts as $contact)
 <tr style="border-top:1px solid #dde5f2">
-<td style="padding:15px 6px">{{ $contact->name }}</td>
+<td style="padding:15px 6px">{{ $contact->name }}
+<details><summary>Edit</summary>
+<form method="POST" action="{{ route('churches.contacts.update', [$church->id, $contact->id]) }}">@csrf @method('PATCH')
+<input name="name" required minlength="2" maxlength="255" value="{{ $contact->name }}" aria-label="Nama">
+<input type="date" name="birthday" value="{{ $contact->birthday }}" aria-label="Tanggal lahir">
+<button>Simpan</button></form></details></td>
 <td>{{ $contact->phone_e164 }}</td>
 <td>{{ $contact->consent_at ? 'Ya' : 'Belum' }}</td>
 <td>@if($contact->consent_at)<form method="POST" action="{{ route('churches.contacts.revoke', [$church->id, $contact->id]) }}">@csrf @method('PATCH')<button>Cabut persetujuan</button></form>@endif
