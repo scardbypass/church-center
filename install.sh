@@ -19,8 +19,10 @@ cd apps/web
 if [[ ! -f .env ]]; then cp .env.example .env; fi
 if ! grep -Eq "^APP_KEY=base64:.+" .env; then php artisan key:generate --force; fi
 # SQLite is suitable for an initial single-server installation; configure MariaDB for production.
-touch database/database.sqlite
-php -r '$p=".env";$s=file_get_contents($p);$s=preg_replace("/^DB_CONNECTION=.*/m","DB_CONNECTION=sqlite",$s);file_put_contents($p,$s);'
+if ! grep -Eq "^DB_CONNECTION=(mysql|mariadb|pgsql|sqlite)" .env; then
+  touch database/database.sqlite
+  php -r '$p=".env";$s=file_get_contents($p);$s=preg_replace("/^DB_CONNECTION=.*/m","DB_CONNECTION=sqlite",$s);file_put_contents($p,$s);'
+fi
 php artisan migrate --force
 npm install
 npm run build
