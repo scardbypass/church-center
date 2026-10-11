@@ -15,7 +15,7 @@
  <p>Peran: {{ ucfirst($church->role) }}</p>
  <p>Kontak: {{ $counts[$church->id]['contacts'] }}</p>
  <p>Status WhatsApp: {{ $counts[$church->id]['whatsapp'] }}</p>
- <span class="state">Fitur operasional menyusul</span>
+ <a class="button secondary" style="margin-top:16px" href="{{ route('churches.contacts.index', $church->id) }}">Kelola Kontak →</a><span class="state">Fitur bot dan otomatisasi masih dikembangkan</span>
 </article>
 @empty
 <article class="feature glass"><span class="emoji">✨</span><h2>Belum ada gereja</h2><p>Buat gereja pertama untuk memulai.</p></article>
