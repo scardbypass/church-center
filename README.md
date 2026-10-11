@@ -11,6 +11,7 @@
 - Migration fondasi `churches`, `church_memberships`, `church_settings`, `church_contacts`, `church_whatsapp_connections`.
 - Node worker `apps/whatsapp-worker/chiwa.js` yang bisa dijalankan PM2, saat ini **health-only**, belum terhubung WhatsApp.
 - Panduan domain, TLS, PM2: [docs/domain-and-pm2.md](docs/domain-and-pm2.md).
+- Panduan Google OAuth: [docs/google-login.md](docs/google-login.md).
 - Skrip `install.sh` untuk membuat Laravel 12 baru dan menerapkan overlay.
 - Dokumentasi instalasi Debian 12 + Nginx + PHP-FPM.
 
@@ -20,7 +21,7 @@
 |---|---|---|
 | Admin Pusat | Kelola gereja, Fulltime, harga, lisensi, transaksi, monitoring, tiket, maintenance, kontrol global | Belum |
 | Fulltime | Dashboard gereja, tim, izin, konfigurasi semua layanan | Belum |
-| Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Schema awal; login belum |
+| Akun | Google OAuth, undangan tim, pembatasan per `church_id` | Login Google dasar dibuat, belum diuji; undangan belum |
 | Kontak | Input manual, CSV/Excel, Google Contacts, consent, deduplikasi | Belum |
 | Bot WhatsApp | QR/pairing per gereja, koneksi, `menu`/`start`, balasan otomatis, FAQ | Worker health-only; integrasi WA belum |
 | Auto IH | Pagi/siang/malam, target grup, jadwal, preview, ON/OFF masing-masing | Belum |
@@ -32,7 +33,7 @@
 | Bantuan | Tiket Fulltime ke Admin dengan lampiran dan status | Belum |
 | Operasional | Kontrol global, maintenance website/bot, emergency stop, audit | Belum |
 
-**Role login hanya Admin Pusat dan Fulltime.** Jemaat tidak perlu dashboard atau akun. Satu lisensi berlaku per gereja, bukan per Fulltime. Semua data operasional harus dibatasi oleh `church_id`. Switch global OFF harus mengalahkan switch lokal ON.
+**Rencana role login hanya Admin Pusat dan Fulltime.** Jemaat tidak perlu dashboard atau akun. Satu lisensi berlaku per gereja, bukan per Fulltime. Semua data operasional harus dibatasi oleh `church_id`. Switch global OFF harus mengalahkan switch lokal ON.
 
 ## Arsitektur
 
