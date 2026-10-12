@@ -19,7 +19,22 @@ class DispatchChurchMessages extends Command
             $this->error('Worker configuration invalid');
             return self::FAILURE;
         }
-        $limit = max(1, min(100, (int) $this->option('limit')));
+        $limit = max(1, min(20, (int) $this->option('limit')));
+        // Prevent simultaneous dispatcher instances from bypassing global pacing.
+        $lock = \Illuminate\Support\Facades\Cache::lock('church-center:dispatch', 180);
+        if (!$lock->get()) {
+            $this->warn('Another dispatcher is already running.');
+            return self::SUCCESS;
+        }
+        try {
+            return $this->dispatchBatch($token, $url, $limit);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function dispatchBatch(string $token, string $url, int $limit): int
+    {
         $ids = DB::table('church_automation_jobs')->where('status', 'queued')
             ->where('scheduled_at', '<=', now())->orderBy('scheduled_at')->limit($limit)->pluck('id');
         foreach ($ids as $id) {
@@ -54,6 +69,15 @@ class DispatchChurchMessages extends Command
                 return $job;
             }, 3);
             if (!$job) continue;
+            // Re-check opt-in immediately before network I/O; a revoke may have occurred
+            // after the initial transaction.
+            $digits = explode('@', $job->target)[0];
+            if (!DB::table('church_contacts')->where('church_id', $job->church_id)
+                ->where('phone_e164', '+'.$digits)->whereNotNull('consent_at')->exists()) {
+                DB::table('church_automation_jobs')->where('id', $id)->where('status', 'sending')
+                    ->update(['status' => 'blocked', 'last_error' => 'Consent revoked before send', 'updated_at' => now()]);
+                continue;
+            }
             try {
                 $response = Http::withToken($token)->acceptJson()->timeout(20)
                     ->post($url.'/churches/'.$job->church_id.'/send', [
