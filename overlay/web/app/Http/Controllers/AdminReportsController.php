@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AdminReportsController extends Controller {
     public function index(Request $request) {
@@ -13,7 +14,17 @@ class AdminReportsController extends Controller {
             ->groupBy('status')->get();
         $churches = DB::table('churches')->select('id','name','active')
             ->orderBy('id')->paginate(30);
-        return view('church-center.admin-reports', compact('counts','payments','churches'));
+        $worker = ['status' => 'unavailable'];
+        $url = config('services.church_worker.url');
+        if (is_string($url) && preg_match('~^http://127\\.0\\.0\\.1:[0-9]{2,5}$~', $url)) {
+            try {
+                $health = Http::timeout(2)->get($url.'/health');
+                if ($health->successful()) $worker = $health->json() ?: $worker;
+            } catch (\\Throwable $e) {
+                // Worker health is informational; reports remain available.
+            }
+        }
+        return view('church-center.admin-reports', compact('counts','payments','churches','worker'));
     }
     public function export(Request $request) {
         abort_unless($request->user()->platform_role === 'admin', 403);
