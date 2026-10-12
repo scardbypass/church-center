@@ -22,7 +22,7 @@ class AdminReportsController extends Controller {
             fputcsv($out, ['church_id','church','status','contacts','messages']);
             DB::table('churches')->orderBy('id')->chunkById(100,function($churches)use($out){
                 foreach($churches as $c){
-                    fputcsv($out,[$c->id,$c->name,$c->active?'active':'inactive',
+                    fputcsv($out,[$c->id, preg_match('/^[=+@\\-]/', ltrim($c->name)) ? "'".$c->name : $c->name, $c->active?'active':'inactive',
                         DB::table('church_contacts')->where('church_id',$c->id)->count(),
                         DB::table('church_automation_jobs')->where('church_id',$c->id)->count()]);
                 }
