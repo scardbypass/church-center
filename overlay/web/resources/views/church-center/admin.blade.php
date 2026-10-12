@@ -17,7 +17,7 @@
 <a class="button primary" href="{{ route('admin.payments.index') }}">Tinjau Permintaan Lisensi →</a>
 <p><a class="button secondary" href="{{ route('admin.churches.index') }}">Kelola Semua Gereja →</a></p>
 <p><a class="button secondary" href="{{ route('admin.users.index') }}">Kelola Pengguna →</a></p>
-<h2>Tiket terbaru</h2>
+<p><a class="button secondary" href="{{ route('admin.reports.index') }}">Laporan Sistem →</a></p><h2>Tiket terbaru</h2>
 @forelse($tickets as $ticket)
 <article class="glass" style="padding:22px;border-radius:20px;margin-bottom:12px">
 <h3><a href="{{ route('tickets.show', $ticket->id) }}">{{ $ticket->subject }}</a></h3>
