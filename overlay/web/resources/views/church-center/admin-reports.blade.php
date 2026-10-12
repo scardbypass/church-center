@@ -2,7 +2,9 @@
 @section('title','Laporan Admin Pusat')
 @section('content')
 <section class="wrap page-heading"><a href="{{ route('admin.index') }}">← Admin Pusat</a><h1>Laporan Sistem</h1><p>Angka pesan merupakan status antrean, bukan bukti pesan diterima penerima.</p></section>
-<section class="wrap glass" style="padding:24px;margin-bottom:20px"><h2>Status pengiriman</h2>
+<section class="wrap glass" style="padding:24px;margin-bottom:20px"><h2>Monitoring WhatsApp Worker</h2>
+<p>Status: {{ $worker['status'] ?? 'unavailable' }} · Koneksi: {{ $worker['connected'] ?? 'tidak diketahui' }} · Uptime: {{ $worker['uptime_seconds'] ?? 'tidak diketahui' }} detik</p>
+<h2>Status pengiriman</h2>
 @foreach($counts as $status => $total)<p>{{ $status }}: {{ number_format($total) }}</p>@endforeach
 <h2>Pembayaran</h2>@foreach($payments as $payment)
 <p>{{ $payment->status }}: {{ $payment->total }} transaksi · Rp{{ number_format($payment->amount,0,',','.') }}</p>
