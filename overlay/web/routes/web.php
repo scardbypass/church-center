@@ -18,6 +18,7 @@ use App\Http\Controllers\TicketReplyController;
 use App\Http\Controllers\ContactEditController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\BirthdaySettingsController;
+use App\Http\Controllers\AdminReportsController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -74,5 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/churches/{churchId}/broadcast', [BroadcastController::class, 'index'])->whereNumber('churchId')->name('churches.broadcast.index');
     Route::post('/churches/{churchId}/broadcast', [BroadcastController::class, 'store'])->whereNumber('churchId')->middleware('throttle:2,1')->name('churches.broadcast.store');
     Route::post('/churches/{churchId}/birthday-settings', [BirthdaySettingsController::class, 'update'])->whereNumber('churchId')->name('churches.birthday.update');
+    Route::get('/admin/reports', [AdminReportsController::class, 'index'])->name('admin.reports.index');
+    Route::get('/admin/reports/export', [AdminReportsController::class, 'export'])->middleware('throttle:5,1')->name('admin.reports.export');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
