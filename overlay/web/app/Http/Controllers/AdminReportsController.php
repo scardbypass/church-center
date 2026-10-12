@@ -16,11 +16,11 @@ class AdminReportsController extends Controller {
             ->orderBy('id')->paginate(30);
         $worker = ['status' => 'unavailable'];
         $url = config('services.church_worker.url');
-        if (is_string($url) && preg_match('~^http://127\\.0\\.0\\.1:[0-9]{2,5}$~', $url)) {
+        if (is_string($url) && preg_match('~^http://127\.0\.0\.1:[0-9]{2,5}$~', $url)) {
             try {
                 $health = Http::timeout(2)->get($url.'/health');
                 if ($health->successful()) $worker = $health->json() ?: $worker;
-            } catch (\\Throwable $e) {
+            } catch (\Throwable $e) {
                 // Worker health is informational; reports remain available.
             }
         }
