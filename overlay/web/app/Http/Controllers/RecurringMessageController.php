@@ -48,9 +48,19 @@ class RecurringMessageController extends Controller
         $this->church($request, $churchId);
         $rule = DB::table('church_recurring_messages')->where('church_id', $churchId)->find($ruleId);
         abort_unless($rule, 404);
-        DB::table('church_recurring_messages')->where('id', $ruleId)->update([
-            'enabled' => !$rule->enabled, 'updated_at' => now(),
-        ]);
+        if (!$rule->enabled) {
+            $licensed = DB::table('church_licenses')->where('church_id', $churchId)
+                ->where('status', 'active')->where('expires_at', '>', now())->exists();
+            abort_unless($licensed, 403, 'Lisensi gereja belum aktif.');
+            $targetPhone = '+'.explode('@', $rule->target)[0];
+            abort_unless(DB::table('church_contacts')->where('church_id', $churchId)
+                ->where('phone_e164', $targetPhone)->whereNotNull('consent_at')->exists(),
+                422, 'Persetujuan kontak tidak ada atau sudah dicabut.');
+        }
+        DB::table('church_recurring_messages')->where('church_id', $churchId)
+            ->where('id', $ruleId)->update([
+                'enabled' => !$rule->enabled, 'updated_at' => now(),
+            ]);
         return redirect()->route('churches.recurring.index', $churchId);
     }
     public function destroy(Request $request, int $churchId, int $ruleId)
