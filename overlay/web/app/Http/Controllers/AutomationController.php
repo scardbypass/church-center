@@ -30,10 +30,14 @@ class AutomationController extends Controller
         $this->authorizeChurch($request, $churchId);
         $data = $request->validate([
             'kind' => ['required', Rule::in(['ih_morning', 'ih_noon', 'ih_evening', 'broadcast', 'reminder'])],
-            'target' => ['required', 'string', 'max:120', 'regex:/^(?:[1-9][0-9]{5,15}@s\\.whatsapp\\.net|[0-9-]+@g\\.us)$/'],
+            'target' => ['required', 'string', 'max:120', 'regex:/^[1-9][0-9]{5,15}@s\\.whatsapp\\.net$/'],
             'message' => ['required', 'string', 'min:2', 'max:5000'],
             'scheduled_at' => ['required', 'date', 'after:now'],
         ]);
+        $phone = '+'.explode('@', $data['target'])[0];
+        abort_unless(DB::table('church_contacts')->where('church_id', $churchId)
+            ->where('phone_e164', $phone)->whereNotNull('consent_at')->exists(), 422,
+            'Penerima harus menjadi kontak gereja yang menyetujui pesan.');
         DB::table('church_automation_jobs')->insert([
             'church_id' => $churchId,
             'kind' => $data['kind'],
@@ -55,6 +59,13 @@ class AutomationController extends Controller
         $licensed = DB::table('church_licenses')->where('church_id', $churchId)
             ->where('status', 'active')->where('expires_at', '>', now())->exists();
         abort_unless($licensed, 403, 'Lisensi gereja belum aktif.');
+        $draft = DB::table('church_automation_jobs')->where('church_id', $churchId)
+            ->where('id', $jobId)->where('status', 'draft')->first();
+        abort_unless($draft, 404);
+        $phone = '+'.explode('@', $draft->target)[0];
+        abort_unless(DB::table('church_contacts')->where('church_id', $churchId)
+            ->where('phone_e164', $phone)->whereNotNull('consent_at')->exists(), 422,
+            'Persetujuan kontak sudah tidak berlaku.');
         $updated = DB::table('church_automation_jobs')->where('church_id', $churchId)
             ->where('id', $jobId)->where('status', 'draft')->where('scheduled_at', '>', now())
             ->update(['status' => 'queued', 'updated_at' => now()]);
