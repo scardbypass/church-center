@@ -4,6 +4,7 @@
 <section class="wrap page-heading" style="text-align:left;padding-bottom:35px">
 <a href="{{ route('dashboard') }}">← Dashboard</a>
 <div class="eyebrow" style="display:flex;margin-top:25px">Kontak Jemaat</div>
+<a class="button secondary" href="{{ route('churches.contacts.export', $church->id) }}">Ekspor CSV Kontak</a>
 <h1 style="font-size:clamp(32px,5vw,52px)">{{ $church->name }}</h1>
 <p class="lead" style="margin:0">Kelola kontak gereja. Kontak tanpa persetujuan tidak boleh menerima broadcast.</p>
 @if(session('status'))<p role="status">{{ session('status') }}</p>@endif
