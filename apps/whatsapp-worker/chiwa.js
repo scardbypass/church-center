@@ -13,6 +13,7 @@ const connections = new Map();
 const MAX_BODY = 12 * 1024;
 const maxChurches = Number(process.env.WORKER_MAX_CHURCHES || 30);
 const shuttingDown = { value: false };
+const retryCounts = new Map();
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Invalid WORKER_PORT');
 if (!secret || Buffer.byteLength(secret) < 32) throw Error('Set WORKER_API_TOKEN (minimum 32 bytes)');
@@ -42,7 +43,7 @@ async function connect(id) {
   await mkdir(dir, { recursive: true, mode: 0o700 });
   const { state: auth, saveCreds } = await useMultiFileAuthState(dir);
   const { version } = await fetchLatestBaileysVersion();
-  const entry = { status: 'connecting', qr: null, socket: null, lastError: null, retries: 0 };
+  const entry = { status: 'connecting', qr: null, socket: null, lastError: null };
   connections.set(id, entry);
   try {
     const socket = makeWASocket({ version, auth, printQRInTerminal: false, markOnlineOnConnect: false, syncFullHistory: false });
@@ -51,7 +52,7 @@ async function connect(id) {
     socket.ev.on('connection.update', ({ connection, qr, lastDisconnect }) => {
       if (connections.get(id) !== entry) return;
       if (qr) { entry.qr = qr; entry.status = 'qr_ready'; }
-      if (connection === 'open') { entry.status = 'connected'; entry.qr = null; entry.retries = 0; }
+      if (connection === 'open') { entry.status = 'connected'; entry.qr = null; retryCounts.delete(id); }
       if (connection === 'close') {
         entry.status = 'disconnected';
         entry.qr = null;
@@ -59,7 +60,8 @@ async function connect(id) {
         entry.lastError = String(code || 'connection_closed');
         connections.delete(id);
         if (!shuttingDown.value && code !== DisconnectReason.loggedOut) {
-          const delay = Math.min(60000, 2000 * Math.pow(2, Math.min(entry.retries++, 5)));
+          const delay = Math.min(60000, 2000 * Math.pow(2, Math.min(retryCounts.get(id) || 0, 5)));
+          retryCounts.set(id, (retryCounts.get(id) || 0) + 1);
           setTimeout(() => { if (!shuttingDown.value) connect(id).catch(console.error); }, delay).unref();
         }
       }
@@ -111,6 +113,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && action === 'disconnect') {
       const c = connections.get(id);
       connections.delete(id);
+      retryCounts.delete(id);
       if (c?.socket) c.socket.end(new Error('manual_disconnect'));
       return json(res, 200, { status: 'disconnected' });
     }
