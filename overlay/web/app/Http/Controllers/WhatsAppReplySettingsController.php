@@ -39,7 +39,7 @@ class WhatsAppReplySettingsController extends Controller
         $settings = ['welcome_message' => trim($data['welcome_message']), 'faq' => $faq];
         DB::table('church_settings')->updateOrInsert(
             ['church_id' => $churchId, 'key' => 'whatsapp_replies'],
-            ['value' => json_encode($settings, JSON_UNESCAPED_UNICODE), 'updated_at' => now()]
+            ['value' => json_encode($settings, JSON_UNESCAPED_UNICODE), 'created_at' => now(), 'updated_at' => now()]
         );
         $url = config('services.church_worker.url');
         $token = config('services.church_worker.token');
