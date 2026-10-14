@@ -14,6 +14,7 @@ const MAX_BODY = 12 * 1024;
 const maxChurches = Number(process.env.WORKER_MAX_CHURCHES || 30);
 const shuttingDown = { value: false };
 const retryCounts = new Map();
+const replySettings = new Map();
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Invalid WORKER_PORT');
 if (!secret || Buffer.byteLength(secret) < 32) throw Error('Set WORKER_API_TOKEN (minimum 32 bytes)');
@@ -72,9 +73,16 @@ async function connect(id) {
         if (message.key.fromMe || !message.message) continue;
         const chat = message.key.remoteJid || '';
         const body = message.message.conversation || message.message.extendedTextMessage?.text || '';
-        if (/^\/?(menu|start)$/i.test(body.trim()) && !chat.endsWith('@g.us')) {
-          socket.sendMessage(chat, { text: 'Selamat datang di Church Center. Hubungi pengurus gereja untuk informasi pelayanan.' }).catch(console.error);
+        if (chat.endsWith('@g.us') || !chat.endsWith('@s.whatsapp.net')) continue;
+        const keyword = body.trim().toLowerCase().replace(/^\//, '');
+        const settings = replySettings.get(id);
+        let answer = null;
+        if (/^(menu|start)$/.test(keyword)) {
+          answer = settings?.welcome_message || 'Selamat datang di Church Center. Hubungi pengurus gereja untuk informasi pelayanan.';
+        } else if (settings?.faq && Object.hasOwn(settings.faq, keyword)) {
+          answer = settings.faq[keyword];
         }
+        if (answer) socket.sendMessage(chat, { text: answer }).catch(console.error);
       }
     });
     return state(id);
@@ -98,7 +106,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (!authorized(req)) return json(res, 401, { error: 'unauthorized' });
   const url = new URL(req.url, 'http://localhost');
-  const match = /^\/churches\/([1-9][0-9]{0,9})(?:\/(connect|status|qr|send|disconnect))?$/.exec(url.pathname);
+  const match = /^\/churches\/([1-9][0-9]{0,9})(?:\/(connect|status|qr|send|disconnect|replies))?$/.exec(url.pathname);
   if (!match) return json(res, 404, { error: 'not_found' });
   const [, id, action] = match;
   try {
@@ -116,6 +124,20 @@ const server = http.createServer(async (req, res) => {
       retryCounts.delete(id);
       if (c?.socket) c.socket.end(new Error('manual_disconnect'));
       return json(res, 200, { status: 'disconnected' });
+    }
+    if (req.method === 'POST' && action === 'replies') {
+      const body = await readJson(req);
+      if (typeof body.welcome_message !== 'string' || body.welcome_message.length < 2 || body.welcome_message.length > 1000 ||
+          !body.faq || typeof body.faq !== 'object' || Array.isArray(body.faq) || Object.keys(body.faq).length > 30) {
+        return json(res, 422, { error: 'invalid_reply_settings' });
+      }
+      for (const [keyword, answer] of Object.entries(body.faq)) {
+        if (!/^[a-z0-9_-]{2,32}$/.test(keyword) || typeof answer !== 'string' || answer.length < 2 || answer.length > 1000) {
+          return json(res, 422, { error: 'invalid_faq_entry' });
+        }
+      }
+      replySettings.set(id, { welcome_message: body.welcome_message, faq: body.faq });
+      return json(res, 200, { status: 'configured', keywords: Object.keys(body.faq).length });
     }
     if (req.method === 'POST' && action === 'send') {
       const c = connections.get(id);
