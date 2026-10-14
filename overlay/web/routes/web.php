@@ -19,6 +19,7 @@ use App\Http\Controllers\ContactEditController;
 use App\Http\Controllers\BroadcastController;
 use App\Http\Controllers\BirthdaySettingsController;
 use App\Http\Controllers\ContactExportController;
+use App\Http\Controllers\WhatsAppReplySettingsController;
 use App\Http\Controllers\AdminReportsController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -80,5 +81,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/reports/export', [AdminReportsController::class, 'export'])->middleware('throttle:5,1')->name('admin.reports.export');
     Route::get('/churches/{churchId}/contacts/export', [ContactExportController::class, 'download'])
         ->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.contacts.export');
+    Route::post('/churches/{churchId}/whatsapp/replies', [WhatsAppReplySettingsController::class, 'update'])
+        ->whereNumber('churchId')->middleware('throttle:5,1')->name('churches.whatsapp.replies.update');
     Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
 });
