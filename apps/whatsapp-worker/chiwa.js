@@ -15,6 +15,7 @@ const maxChurches = Number(process.env.WORKER_MAX_CHURCHES || 30);
 const shuttingDown = { value: false };
 const retryCounts = new Map();
 const replySettings = new Map();
+const manualDisconnects = new Set();
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Invalid WORKER_PORT');
 if (!secret || Buffer.byteLength(secret) < 32) throw Error('Set WORKER_API_TOKEN (minimum 32 bytes)');
@@ -37,6 +38,7 @@ function state(id) {
   return c ? { church_id: id, status: c.status, qr_ready: Boolean(c.qr), last_error: c.lastError || null } : { church_id: id, status: 'disconnected', qr_ready: false };
 }
 async function connect(id) {
+  manualDisconnects.delete(id);
   if (!validChurch(id)) throw Error('invalid_church_id');
   if (connections.has(id)) return state(id);
   if (connections.size >= maxChurches) throw Error('worker_capacity_reached');
@@ -60,10 +62,10 @@ async function connect(id) {
         const code = lastDisconnect?.error?.output?.statusCode;
         entry.lastError = String(code || 'connection_closed');
         connections.delete(id);
-        if (!shuttingDown.value && code !== DisconnectReason.loggedOut) {
+        if (!shuttingDown.value && !manualDisconnects.has(id) && code !== DisconnectReason.loggedOut) {
           const delay = Math.min(60000, 2000 * Math.pow(2, Math.min(retryCounts.get(id) || 0, 5)));
           retryCounts.set(id, (retryCounts.get(id) || 0) + 1);
-          setTimeout(() => { if (!shuttingDown.value) connect(id).catch(console.error); }, delay).unref();
+          setTimeout(() => { if (!shuttingDown.value && !manualDisconnects.has(id)) connect(id).catch(console.error); }, delay).unref();
         }
       }
     });
@@ -120,6 +122,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && action === 'connect') return json(res, 202, await connect(id));
     if (req.method === 'POST' && action === 'disconnect') {
       const c = connections.get(id);
+      manualDisconnects.add(id);
       connections.delete(id);
       retryCounts.delete(id);
       if (c?.socket) c.socket.end(new Error('manual_disconnect'));
