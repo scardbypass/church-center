@@ -71,11 +71,19 @@ class ContactController extends Controller
     public function destroy(Request $request, int $churchId, int $contactId)
     {
         $this->authorizeChurch($request, $churchId);
-        $deleted = DB::table('church_contacts')
-            ->where('church_id', $churchId)
-            ->where('id', $contactId)
-            ->delete();
-        abort_unless($deleted, 404);
+        DB::transaction(function () use ($churchId, $contactId) {
+            $contact = DB::table('church_contacts')->where('church_id', $churchId)
+                ->where('id', $contactId)->lockForUpdate()->first();
+            abort_unless($contact, 404);
+            $target = substr($contact->phone_e164, 1).'@s.whatsapp.net';
+            DB::table('church_automation_jobs')->where('church_id', $churchId)
+                ->where('target', $target)->whereIn('status', ['draft', 'queued'])
+                ->update(['status' => 'blocked', 'last_error' => 'Contact deleted', 'updated_at' => now()]);
+            DB::table('church_recurring_messages')->where('church_id', $churchId)
+                ->where('target', $target)->update(['enabled' => false, 'updated_at' => now()]);
+            DB::table('church_contacts')->where('church_id', $churchId)
+                ->where('id', $contactId)->delete();
+        });
         return redirect()->route('churches.contacts.index', $churchId)->with('status', 'Kontak dihapus.');
     }
 }
