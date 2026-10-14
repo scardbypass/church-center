@@ -50,7 +50,16 @@ class WhatsAppController extends Controller
                 // QR can expire between status and image fetch.
             }
         }
-        return response()->view('church-center.whatsapp', compact('church', 'status', 'qrImage'))
+        $row = DB::table('church_settings')->where('church_id', $churchId)
+            ->where('key', 'whatsapp_replies')->first();
+        $replyConfig = $row ? json_decode($row->value, true) : [];
+        $replyConfig = is_array($replyConfig) ? $replyConfig : [];
+        $welcomeMessage = $replyConfig['welcome_message'] ?? 'Selamat datang di Church Center. Hubungi pengurus gereja untuk informasi pelayanan.';
+        $faqText = '';
+        foreach (($replyConfig['faq'] ?? []) as $key => $answer) {
+            $faqText .= $key.'|'.$answer."\n";
+        }
+        return response()->view('church-center.whatsapp', compact('church', 'status', 'qrImage', 'welcomeMessage', 'faqText'))
             ->header('Cache-Control', 'private, no-store');
     }
 
