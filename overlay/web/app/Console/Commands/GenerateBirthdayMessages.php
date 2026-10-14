@@ -25,7 +25,8 @@ class GenerateBirthdayMessages extends Command
                 $mmdd = substr($today, 5);
                 DB::table('church_contacts')->where('church_id', $church->id)
                     ->whereNotNull('consent_at')->whereNotNull('birthday')
-                    ->whereRaw("DATE_FORMAT(birthday, '%m-%d') = ?", [$mmdd])
+                    ->whereMonth('birthday', (int) substr($mmdd, 0, 2))
+                    ->whereDay('birthday', (int) substr($mmdd, 3, 2))
                     ->orderBy('id')->chunkById(100, function ($contacts) use ($church, $today, $template) {
                         foreach ($contacts as $contact) {
                             $message = str_replace('{name}', $contact->name, $template);
